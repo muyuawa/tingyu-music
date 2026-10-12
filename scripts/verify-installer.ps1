@@ -17,6 +17,7 @@ $properties=@{};foreach($row in (Rows 'Property')){$properties[$row[0]]=$row[1]}
 if($properties.DISABLEROLLBACK -ne '1'){throw 'Rollback backups must be disabled for this package'}
 $execute=@{};foreach($row in (Rows 'InstallExecuteSequence')){$execute[$row[0]]=[int]$row[2]}
 if(-not $execute.ContainsKey('DisableRollback') -or $execute.DisableRollback -ge $execute.InstallValidate -or $execute.DisableRollback -ge $execute.RemoveExistingProducts){throw 'Rollback must be disabled before installation starts'}
+if($execute.RemoveExistingProducts -le $execute.InstallExecute -or $execute.RemoveExistingProducts -ge $execute.InstallFinalize){throw 'Upgrade must install new components before removing old registration'}
 $directories=@{};foreach($row in (Rows 'Directory')){$directories[$row[0]]=$row}
 if($properties.WIXUI_INSTALLDIR -ne 'INSTALLROOT'){throw 'Directory picker must select the parent folder'}
 if($directories.INSTALLFOLDER[1] -ne 'INSTALLROOT' -or $directories.INSTALLFOLDER[2] -ne 'Tingyu'){throw 'Missing automatic Tingyu subdirectory'}

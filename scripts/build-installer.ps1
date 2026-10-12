@@ -39,7 +39,7 @@ $xml=@"
   <Package Name="听屿" Manufacturer="Muyu Music" Version="$version" UpgradeCode="3F0165E1-33B1-41E2-9C92-29AB5143C3C2" Scope="perUser" InstallerVersion="500" Language="2052">
     <Property Id="DISABLEROLLBACK" Value="1" Secure="yes"/>
     <InstallExecuteSequence><DisableRollback Before="InstallValidate"/></InstallExecuteSequence>
-    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="已安装更新版本的 听屿。"/>
+    <MajorUpgrade Schedule="afterInstallExecute" AllowSameVersionUpgrades="yes" DowngradeErrorMessage="已安装更新版本的 听屿。"/>
     <MediaTemplate EmbedCab="yes" CompressionLevel="high"/>
     <Icon Id="TingyuAppIcon" SourceFile="$(EscapeXml (Join-Path $sourceRoot 'Assets\app.ico'))"/>
     <Property Id="ARPPRODUCTICON" Value="TingyuAppIcon"/>
