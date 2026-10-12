@@ -1,4 +1,6 @@
-# 听屿 1.0
+# 听屿 · Tingyu Music
+
+[下载正式版](https://github.com/muyuawa/tingyu-music/releases/latest)
 
 Windows x64 本地离线音乐播放器，支持专辑取色动态背景、Liquid Glass 播放控制条、同步歌词和 WASAPI / ASIO 音频输出。
 
