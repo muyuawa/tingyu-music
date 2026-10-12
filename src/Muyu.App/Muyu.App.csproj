@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>Muyu.App</RootNamespace><ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Platforms>x64</Platforms><PlatformTarget>x64</PlatformTarget><RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI><WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained><SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><EnableMsixTooling>false</EnableMsixTooling>
+    <MuyuDiagnostics Condition="'$(MuyuDiagnostics)' == ''">false</MuyuDiagnostics>
+    <DefineConstants Condition="'$(MuyuDiagnostics)' == 'true'">$(DefineConstants);MUYU_DIAGNOSTICS</DefineConstants>
+    <DebugType Condition="'$(MuyuDiagnostics)' != 'true'">none</DebugType>
+    <DebugSymbols Condition="'$(MuyuDiagnostics)' != 'true'">false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Assets\*.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\*.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <PackageReference Include="LiquidGlassWinUI" Version="1.0.3" GeneratePathProperty="true" ExcludeAssets="all" />
+    <PackageReference Include="NAudio.Wasapi" Version="2.3.0" />
+    <ProjectReference Include="..\..\native\vendor\LiquidGlassWinUI\LiquidGlassWinUI\LiquidGlassWinUI.csproj" />
+    <Content Include="$(NuGetPackageRoot)liquidglasswinui\1.0.3\runtimes\win-x64\native\CustomEffectRuntimeNative.dll" Link="CustomEffectRuntimeNative.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
+    <ProjectReference Include="..\Muyu.Core\Muyu.Core.csproj" />
+    <Content Include="..\..\native\build\Release\MuyuAudio.dll" Link="MuyuAudio.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\native\build\_deps\flac-src\COPYING.Xiph" Link="licenses\libFLAC.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(MuyuDiagnostics)' != 'true'">
+    <Compile Remove="MainWindow.Capture*.cs;WindowCapture.cs"/>
+  </ItemGroup>
+  <Target Name="PublishMuyuXamlResources" AfterTargets="ComputeFilesToPublish">
+    <Error Condition="!Exists('$(ProjectPriFullPath)')" Text="The application XAML resource index was not generated." />
+    <ItemGroup>
+      <_MuyuXamlPublishResource Include="$(ProjectPriFullPath);$(TargetDir)**\*.xbf" />
+      <ResolvedFileToPublish Include="@(_MuyuXamlPublishResource)">
+        <RelativePath>%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+</Project>

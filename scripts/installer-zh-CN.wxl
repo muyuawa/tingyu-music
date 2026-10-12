@@ -1,0 +1,6 @@
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="zh-CN">
+  <String Id="InstallDirDlgDescription" Value="选择父文件夹，程序将自动安装到其中的 Tingyu 子文件夹。"/>
+  <String Id="InstallDirDlgFolderLabel" Value="安装位置（父文件夹）：最终路径为所选目录\Tingyu"/>
+  <String Id="VerifyReadyDlgInstallText" Value="安装位置：[INSTALLFOLDER]&#13;&#10;&#13;&#10;如果检测到旧版本，将在原目录更新程序文件。音乐库、播放列表和个人设置会保留。点击“安装”继续。"/>
+  <String Id="VerifyReadyDlgInstall" Value="安装 / 更新"/>
+</WixLocalization>

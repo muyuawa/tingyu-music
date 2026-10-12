@@ -1,0 +1,32 @@
+{
+  "project": "FFmpeg",
+  "commit": "330caae0c1acccd2222edc52a05940c574561ce5",
+  "source_url": "https://github.com/FFmpeg/FFmpeg/archive/330caae0c1acccd2222edc52a05940c574561ce5.tar.gz",
+  "source_sha256": "67B5876EE973A26F267280B2C1EB851A0AC7A502382D20E41B7A819111886AF9",
+  "license": "LGPL-2.1-or-later",
+  "gpl_enabled": false,
+  "version3_enabled": false,
+  "network_enabled": false,
+  "external_libraries": [],
+  "compiler": "MSVC 19.42.34433 x64",
+  "source_modified": false,
+  "build_script": "build-ffmpeg.ps1",
+  "libraries": [
+    {
+      "name": "avcodec-62.dll",
+      "sha256": "A5E36F5351FE2D2EA00D3DD01FEE8894B920C54E452A629C6E52DDDD4B691A39"
+    },
+    {
+      "name": "avformat-62.dll",
+      "sha256": "4D947E90667C4A79EF43F10641364EED945307FBF95D9D6D250BBC1655A68E03"
+    },
+    {
+      "name": "avutil-60.dll",
+      "sha256": "713FF6A68EE6F2EEB6AAF290FBC9C85D024F9F165F82736AC968681487B3C31E"
+    },
+    {
+      "name": "swresample-6.dll",
+      "sha256": "0CC73FB0433418CF8B2D975F49F9C20CA655B14E8354EA99A5AB13E260C95A43"
+    }
+  ]
+}

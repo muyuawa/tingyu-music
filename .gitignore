@@ -1,0 +1,6 @@
+**/bin/
+**/obj/
+native/build/
+.vs/
+artifacts/
+*.user

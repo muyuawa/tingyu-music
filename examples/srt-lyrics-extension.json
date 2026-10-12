@@ -1,0 +1,8 @@
+{
+  "Version": 1,
+  "Id": "muyu.example.srt",
+  "Name": "本地 SRT 时间字幕",
+  "Extensions": [".srt"],
+  "Pattern": "^\\d+\\r?\\n(?<time>\\d{2}:\\d{2}:\\d{2}[,.]\\d{3}) --> [^\\r\\n]+\\r?\\n(?<text>[\\s\\S]*?)(?=\\r?\\n\\r?\\n|\\z)",
+  "Enabled": false
+}
