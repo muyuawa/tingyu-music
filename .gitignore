@@ -4,3 +4,26 @@ native/build/
 .vs/
 artifacts/
 *.user
+
+# Local output and personal data
+/release/
+/data/
+/portable/
+/logs/
+/internal-notes/
+*.log
+*.pdb
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12

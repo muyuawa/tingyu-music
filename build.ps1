@@ -42,7 +42,7 @@ try {
         }
     }
     & (Join-Path $repo 'scripts\collect-notices.ps1') -Destination $portable
-    Copy-Item -LiteralPath 'README.md','IMPLEMENTATION_STATUS.md','EXTENSIONS.md','UI_RENDERING.md','UI_REQUIREMENTS.md' -Destination $portable
+    Copy-Item -LiteralPath 'README.md','EXTENSIONS.md' -Destination $portable
     New-Item -ItemType Directory -Path (Join-Path $portable 'examples') -Force | Out-Null
     Copy-Item -LiteralPath 'examples\srt-lyrics-extension.json' -Destination (Join-Path $portable 'examples')
     [IO.File]::WriteAllText((Join-Path $portable 'portable.marker'),'Muyu Music portable data is stored in the adjacent data folder.')
