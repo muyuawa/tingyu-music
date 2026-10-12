@@ -4,6 +4,12 @@
 
 Windows x64 本地离线音乐播放器，支持专辑取色动态背景、Liquid Glass 播放控制条、同步歌词和 WASAPI / ASIO 音频输出。
 
+## 界面预览
+
+![音乐库](docs/screenshots/library.png)
+
+![播放界面](docs/screenshots/now-playing.png)
+
 ## 安装与更新
 
 运行 Tingyu-1.0.1-win-x64.msi。需要 Windows 10 2004 或更新的 64 位系统。首次安装选择父文件夹，程序自动放入英文 Tingyu 子文件夹。检测到已有版本后使用原位置更新，不重复创建子文件夹。更新前请从托盘退出播放器。 安装器按需请求系统权限；播放器运行无需管理员权限。安装不保留回滚备份，中断后请重新运行安装包修复。
