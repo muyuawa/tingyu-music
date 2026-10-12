@@ -18,6 +18,7 @@ public sealed partial class MainWindow
             captureActive=true;Root.IsHitTestVisible=false;clock.Stop();volumePoll.Stop();Notice.IsOpen=false;
             AppWindow.Show();Activate();
             ResizeForDips(1440,940);await Task.Delay(500);
+            if(Environment.GetCommandLineArgs().Contains("--background-blur-only")){await CaptureBackgroundBlur(output);return;}
             Navigate("now");await Refresh();Layout();
             if(Environment.GetCommandLineArgs().Contains("--caption-only")){await CaptureVolumeBackendSwitch(output);await CaptureCaptionTransitions(output);return;}
             if(Environment.GetCommandLineArgs().Contains("--obsolete-caption-only")){await CaptureCaptionTransitions(output);return;}

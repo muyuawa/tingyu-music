@@ -86,6 +86,9 @@ public sealed class FlowingBackdrop : IDisposable
     {
         if(!double.IsFinite(amount))return;
         BlurAmount=Math.Clamp(amount,0,80);
+        // Smooth the small abstract palette texture before it is stretched to
+        // the window; blurring broad full-size gradients alone is barely visible.
+        artwork.SetBlur(BlurAmount);
         blurBrush.Properties.InsertScalar("BackgroundBlur.BlurAmount",(float)BlurAmount);
         scene.Effect=BlurAmount>0?blurBrush:null;
     }
@@ -93,7 +96,7 @@ public sealed class FlowingBackdrop : IDisposable
     {
         this.reducedMotion=reducedMotion;
         dark=isDark;
-        SetBlur(lowPower?Math.Min(8,blur):blur);
+        SetBlur(blur);
         visible=enabled;host.Visibility=enabled?Visibility.Visible:Visibility.Collapsed;animate=!reducedMotion&&!lowPower;UpdateAnimation();
     }
     public void SetForeground(bool value){if(foreground==value)return;foreground=value;UpdateAnimation();}

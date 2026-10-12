@@ -24,8 +24,11 @@ internal static class PerceptualPalette
     {
         var lab=Convert(color);double chroma=Math.Sqrt(lab.A*lab.A+lab.B*lab.B);
         // Tone lightness independently of chroma: adding white to RGB erased accents.
-        double target=dark?.26+.10*lab.L:.88+.04*lab.L;
-        double scale=chroma>0?Math.Min(dark?.09:.11,chroma*1.15)/chroma:0;
+        double target=dark?.28+.14*lab.L:.80+.06*lab.L;
+        // Keep genuine chroma instead of lifting every cover toward white.
+        // Muted/monochrome artwork stays muted; colorful artwork gets a larger
+        // gamut while scene contrast checks still protect the foreground.
+        double scale=chroma>0?Math.Min(dark?.14:.16,chroma*1.15)/chroma:0;
         return Convert(new Lab(target,lab.A*scale,lab.B*scale));
     }
     internal static (RgbColor Color,double Weight)[] Cluster((RgbColor Color,double Weight)[] histogram)
@@ -63,7 +66,7 @@ internal static class PerceptualPalette
             }).Where(p=>p.Weight>=histogram.Sum(h=>h.Weight)*.001).ToArray();
         var selected=new List<(RgbColor Color,double Weight)>{clustered[0]};
         var accents=new List<Lab>();
-        foreach(int role in Enumerable.Range(0,2))
+        foreach(int role in Enumerable.Range(0,3))
         {
             var candidates=chromatic.Where(p=>
             {

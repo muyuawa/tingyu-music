@@ -27,6 +27,13 @@ internal static class AlbumColorTests
         var earth=AlbumColorEngine.Analyze(Solid(new(133,116,100)));check(earth.HasArtwork&&earth.DominantColor==new RgbColor(133,116,100),"Muted earth colors are retained");
         var pixels=Solid(new(8,8,8));for(int i=0;i<32;i++){pixels[i*4]=10;pixels[i*4+1]=220;pixels[i*4+2]=240;}
         var accents=AlbumColorEngine.Analyze(pixels);check(accents.DominantColor==new RgbColor(8,8,8)&&accents.Colors.Any(c=>c.G>180&&c.B>180),"Small vivid accents coexist with a dark dominant area");
+        var colorful=Solid(new(100,100,100));
+        RgbColor[] highlights=[new(20,220,240),new(240,30,190),new(240,150,20)];
+        for(int i=0;i<96;i++){var c=highlights[i/32];colorful[i*4]=c.R;colorful[i*4+1]=c.G;colorful[i*4+2]=c.B;}
+        var diverse=AlbumColorEngine.Analyze(colorful);
+        check(diverse.Colors.Any(c=>c.G>180&&c.B>180)&&diverse.Colors.Any(c=>c.R>180&&c.B>150&&c.G<80)&&diverse.Colors.Any(c=>c.R>180&&c.G>100&&c.B<80),"Three small distinct cover highlights survive beside a dominant neutral area");
+        var vividLight=AlbumColorEngine.BackdropPixels(Solid(new(240,30,190)),false);
+        check(new RgbColor(vividLight[0],vividLight[1],vividLight[2]).Saturation>.30,"Light theme preserves visible cover chroma instead of washing it toward white");
         check(!AlbumColorEngine.Analyze([]).HasArtwork&&!AlbumColorEngine.Analyze([1,2,3]).HasArtwork&&!AlbumColorEngine.Analyze(new byte[4096]).HasArtwork,"Missing malformed and fully transparent input use baseline fallback");
         check(Math.Abs(AlbumColorEngine.Contrast(new(0,0,0),new(255,255,255))-21)<1e-9,"WCAG contrast uses linearized sRGB and black-white ratio 21");
         check(!AlbumColorEngine.Scene(black,false,true).Dark&&!AlbumColorEngine.Scene(black,false,false).Dark&&AlbumColorEngine.Scene(white,true,true).Dark,"Explicit light and dark themes remain authoritative for any cover");

@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.UI.Composition;
@@ -20,15 +20,18 @@ internal sealed class ArtworkBackdrop : IDisposable
     private bool dark,animating;
     private long transitionId;
     private Vector2 size;
+    private double blurAmount=16;
     internal bool HasArtwork=>frame!=null;
     private sealed class Frame : IDisposable
     {
         internal required ContainerVisual Visual;
         internal required CompositionDrawingSurface Surface;
+        internal required CanvasBitmap Bitmap;
+        internal required GaussianBlurEffect Blur;
         internal readonly List<SpriteVisual> Sprites=[];
         internal readonly List<CompositionSurfaceBrush> Brushes=[];
         internal readonly List<AnimationController> Controllers=[];
-        public void Dispose(){foreach(var sprite in Sprites){sprite.StopAnimation("RotationAngleInDegrees");sprite.StopAnimation("RelativeOffsetAdjustment");sprite.Dispose();}foreach(var controller in Controllers)controller.Dispose();foreach(var brush in Brushes)brush.Dispose();Surface.Dispose();Visual.Dispose();}
+        public void Dispose(){foreach(var sprite in Sprites){sprite.StopAnimation("RotationAngleInDegrees");sprite.StopAnimation("RelativeOffsetAdjustment");sprite.Dispose();}foreach(var controller in Controllers)controller.Dispose();foreach(var brush in Brushes)brush.Dispose();Blur.Dispose();Bitmap.Dispose();Surface.Dispose();Visual.Dispose();}
     }
     internal ArtworkBackdrop(Compositor compositor,ContainerVisual parent)
     {
@@ -43,10 +46,9 @@ internal sealed class ArtworkBackdrop : IDisposable
         if(rgba is {Length:4096})
         {
             var surface=graphics.CreateDrawingSurface(new Windows.Foundation.Size(32,32),Microsoft.Graphics.DirectX.DirectXPixelFormat.B8G8R8A8UIntNormalized,Microsoft.Graphics.DirectX.DirectXAlphaMode.Premultiplied);
-            using(var bitmap=CanvasBitmap.CreateFromBytes(CanvasDevice.GetSharedDevice(),AlbumColorEngine.BackdropPixels(rgba,dark),32,32,DirectXPixelFormat.R8G8B8A8UIntNormalized))
-            using(var blur=new GaussianBlurEffect{Source=bitmap,BlurAmount=1.25f,BorderMode=EffectBorderMode.Hard})
-            using(var draw=CanvasComposition.CreateDrawingSession(surface))draw.DrawImage(blur);
-            frame=new Frame{Visual=compositor.CreateContainerVisual(),Surface=surface};root.Children.InsertAtTop(frame.Visual);
+            var bitmap=CanvasBitmap.CreateFromBytes(CanvasDevice.GetSharedDevice(),AlbumColorEngine.BackdropPixels(rgba,dark),32,32,DirectXPixelFormat.R8G8B8A8UIntNormalized);
+            frame=new Frame{Visual=compositor.CreateContainerVisual(),Surface=surface,Bitmap=bitmap,Blur=new GaussianBlurEffect{Source=bitmap,BorderMode=EffectBorderMode.Hard}};
+            Redraw(frame);root.Children.InsertAtTop(frame.Visual);
             for(int i=0;i<2;i++)
             {
                 var brush=compositor.CreateSurfaceBrush(surface);brush.Stretch=CompositionStretch.UniformToFill;
@@ -73,6 +75,23 @@ internal sealed class ArtworkBackdrop : IDisposable
             }
             else{ClearRetired();root.Children.Remove(previous.Visual);previous.Dispose();}
         }
+    }
+    internal void SetBlur(double amount)
+    {
+        if(blurAmount==amount)return;
+        blurAmount=amount;
+        if(frame!=null)Redraw(frame);
+        foreach(var previous in retired)Redraw(previous);
+    }
+    private void Redraw(Frame value)
+    {
+        // Nonlinear strength retains distinct colors at small settings while
+        // the upper range visibly blends them. Only a 32x32 surface is redrawn
+        // on user adjustment; animation remains on the compositor.
+        value.Blur.BlurAmount=(float)(12*Math.Pow(blurAmount/80,1.5));
+        using var draw=CanvasComposition.CreateDrawingSession(value.Surface);
+        draw.Clear(Microsoft.UI.Colors.Transparent);
+        draw.DrawImage(blurAmount==0?value.Bitmap:value.Blur);
     }
     internal void Resize(Vector2 value)
     {

@@ -487,8 +487,8 @@ public sealed partial class MainWindow : Window
         var backgroundPanel=new StackPanel{Spacing=12};
         var backgroundBlurLabel=new TextBlock{Text=$"播放页背景模糊 · {backgroundBlurValue:0.#}"};backgroundPanel.Children.Add(backgroundBlurLabel);
         var backgroundBlur=new Slider{Minimum=0,Maximum=80,StepFrequency=.5,Value=backgroundBlurValue};AutomationProperties.SetName(backgroundBlur,"播放页背景模糊程度");backgroundPanel.Children.Add(backgroundBlur);
-        backgroundBlur.ValueChanged+=(_,_)=>{backgroundBlurLabel.Text=$"播放页背景模糊 · {backgroundBlur.Value:0.#}";if(page=="now")flowingBackdrop?.SetBlur(store.Get("glass-economy")=="true"?Math.Min(8,backgroundBlur.Value):backgroundBlur.Value);};
-        backgroundPanel.Children.Add(new TextBlock{Text="仅模糊流光背景，封面和歌词保持清晰。0 关闭；拖动实时预览，取消恢复。与玻璃模糊分开保存。",TextWrapping=TextWrapping.Wrap,FontSize=12});
+        backgroundBlur.ValueChanged+=(_,_)=>{backgroundBlurLabel.Text=$"播放页背景模糊 · {backgroundBlur.Value:0.#}";flowingBackdrop?.SetBlur(backgroundBlur.Value);};
+        backgroundPanel.Children.Add(new TextBlock{Text="曲库与播放页共用，仅模糊流光背景，封面和歌词不受影响。0 关闭；拖动实时预览，取消恢复。与玻璃模糊分开保存。",TextWrapping=TextWrapping.Wrap,FontSize=12});
         panel.Children.Add(new Expander{Header="播放背景",Content=backgroundPanel,HorizontalAlignment=HorizontalAlignment.Stretch});
         var glassPanel=new StackPanel{Spacing=12};var glassValues=glassRenderer?.Parameters??new GlassParameters();
         NumberBox GlassAdjustment(string title,double minimum,double maximum,double value,double step)

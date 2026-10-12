@@ -37,6 +37,8 @@ $components.Add('<Component Id="StartMenuShortcut" Directory="ProgramMenuFolder"
 $xml=@"
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="听屿" Manufacturer="Muyu Music" Version="$version" UpgradeCode="3F0165E1-33B1-41E2-9C92-29AB5143C3C2" Scope="perUser" InstallerVersion="500" Language="2052">
+    <Property Id="DISABLEROLLBACK" Value="1" Secure="yes"/>
+    <InstallExecuteSequence><DisableRollback Before="InstallInitialize"/></InstallExecuteSequence>
     <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="已安装更新版本的 听屿。"/>
     <MediaTemplate EmbedCab="yes" CompressionLevel="high"/>
     <Icon Id="TingyuAppIcon" SourceFile="$(EscapeXml (Join-Path $sourceRoot 'Assets\app.ico'))"/>
@@ -55,7 +57,7 @@ $xml=@"
     <Binary Id="TingyuInstallerHelper" SourceFile="$(EscapeXml (Join-Path $installerNative 'Release\TingyuInstaller.dll'))"/>
     <CustomAction Id="DetectTingyuInstall" BinaryRef="TingyuInstallerHelper" DllEntry="DetectTingyuInstall" Execute="firstSequence" Return="check"/>
     <CustomAction Id="RestoreTingyuInstallPath" BinaryRef="TingyuInstallerHelper" DllEntry="RestoreTingyuInstallPath" Execute="immediate" Return="check"/>
-    <CustomAction Id="CleanupTingyuData" BinaryRef="TingyuInstallerHelper" DllEntry="CleanupTingyuData" Execute="commit" Impersonate="yes" Return="check"/>
+    <CustomAction Id="CleanupTingyuData" BinaryRef="TingyuInstallerHelper" DllEntry="CleanupTingyuData" Execute="deferred" Impersonate="yes" Return="check"/>
     <SetProperty Id="CleanupTingyuData" Value="[INSTALLFOLDER]" Before="CleanupTingyuData" Sequence="execute" Condition="Installed AND REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE"/>
     <InstallExecuteSequence><Custom Action="CleanupTingyuData" Before="InstallFinalize" Condition="Installed AND REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE"/></InstallExecuteSequence>
     <InstallUISequence><Custom Action="DetectTingyuInstall" After="AppSearch" Condition="1"/><Custom Action="RestoreTingyuInstallPath" After="CostFinalize" Condition="MUYU_PREVIOUS_INSTALL"/></InstallUISequence>

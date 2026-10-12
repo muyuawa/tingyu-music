@@ -7,7 +7,7 @@ namespace Muyu.App;
 /// <summary>Diagnostic-only capture of this app's window; unused by the material renderer.</summary>
 internal static class WindowCapture
 {
-    internal static async Task Save(Microsoft.UI.Xaml.Window window,string path)
+    internal static async Task Save(Microsoft.UI.Xaml.Window window,string path,int minimumContrast=30)
     {
         var handle=WindowNative.GetWindowHandle(window);GetWindowRect(handle,out var bounds);
         int width=bounds.Right-bounds.Left,height=bounds.Bottom-bounds.Top;
@@ -32,7 +32,7 @@ internal static class WindowCapture
                 }
                 // Initial shader compilation can leave an all-white client with only native
                 // caption buttons. That is an empty frame just like an all-black client.
-                if(visible>samples/20&&maximum-minimum>30)break;
+                if(visible>samples/20&&maximum-minimum>minimumContrast)break;
                 if(attempt==39)throw new IOException("窗口尚未呈现有效 GPU 内容，截图未通过空帧检查");
                 await Task.Delay(200);
             }
