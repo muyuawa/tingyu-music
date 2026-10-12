@@ -18,6 +18,9 @@ if($properties.DISABLEROLLBACK -ne '1'){throw 'Rollback backups must be disabled
 $execute=@{};foreach($row in (Rows 'InstallExecuteSequence')){$execute[$row[0]]=[int]$row[2]}
 if(-not $execute.ContainsKey('DisableRollback') -or $execute.DisableRollback -ge $execute.InstallValidate -or $execute.DisableRollback -ge $execute.RemoveExistingProducts){throw 'Rollback must be disabled before installation starts'}
 if($execute.RemoveExistingProducts -le $execute.InstallExecute -or $execute.RemoveExistingProducts -ge $execute.InstallFinalize){throw 'Upgrade must install new components before removing old registration'}
+$summary=$database.SummaryInformation(0)
+if(([int]$summary.Property(15) -band 8) -ne 0){throw 'Installer must allow elevation for protected replacement staging'}
+if($properties.ContainsKey('ALLUSERS') -or $properties.ContainsKey('MSIINSTALLPERUSER')){throw 'Existing per-user installation context must be preserved'}
 $directories=@{};foreach($row in (Rows 'Directory')){$directories[$row[0]]=$row}
 if($properties.WIXUI_INSTALLDIR -ne 'INSTALLROOT'){throw 'Directory picker must select the parent folder'}
 if($directories.INSTALLFOLDER[1] -ne 'INSTALLROOT' -or $directories.INSTALLFOLDER[2] -ne 'Tingyu'){throw 'Missing automatic Tingyu subdirectory'}
@@ -48,4 +51,4 @@ foreach($file in (Rows 'File')){
     $cleanupSequence=@(Rows 'InstallExecuteSequence' | Where-Object {$_[0] -eq 'CleanupTingyuData'})
     if($cleanupSequence.Count -ne 1 -or $cleanupSequence[0][1] -ne 'Installed AND REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE'){throw 'Cleanup must run only on explicit uninstall, never upgrades'}
 }
-[pscustomobject]@{package=(Resolve-Path -LiteralPath $Path).Path;directory_selection=$true;automatic_subdirectory='Tingyu';dialog_navigation=$true;previous_directory_persisted=$true;upgrade_path_sequence_verified=$true;development_files_excluded=$true;rollback_backups_disabled=$true;ui_automation_used=$false;actual_installation_tested=$false;sha256=(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash}
+[pscustomobject]@{package=(Resolve-Path -LiteralPath $Path).Path;directory_selection=$true;automatic_subdirectory='Tingyu';dialog_navigation=$true;previous_directory_persisted=$true;upgrade_path_sequence_verified=$true;development_files_excluded=$true;rollback_backups_disabled=$true;installer_elevation_enabled=$true;per_user_context_preserved=$true;ui_automation_used=$false;actual_installation_tested=$false;sha256=(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash}

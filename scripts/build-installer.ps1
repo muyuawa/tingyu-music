@@ -75,4 +75,16 @@ $authoring=Join-Path $repo 'artifacts\MuyuMusic.wxs'
 if(-not $Output){$Output=Join-Path $repo ('artifacts\MuyuMusic-'+$version+'-win-x64.msi')}
 & $wix build $authoring (Join-Path $PSScriptRoot 'installer-ui.wxs') -loc (Join-Path $PSScriptRoot 'installer-zh-CN.wxl') -ext $uiExtension -culture zh-CN -arch x64 -o $Output
 if($LASTEXITCODE -ne 0){throw 'Installer compilation failed'}
+# Keep per-user registration, but allow Windows Installer to elevate its
+# execution service. Advertising LUA capability caused error 1926 when the
+# engine staged overwritten DLLs in the protected Config.Msi directory.
+$installer=New-Object -ComObject WindowsInstaller.Installer
+$database=$installer.OpenDatabase([IO.Path]::GetFullPath($Output),1)
+$summary=$database.SummaryInformation(1)
+$summary.Property(15)=([int]$summary.Property(15) -band (-bnot 8))
+$summary.Persist()
+$database.Commit()
+[Runtime.InteropServices.Marshal]::FinalReleaseComObject($summary) | Out-Null
+[Runtime.InteropServices.Marshal]::FinalReleaseComObject($database) | Out-Null
+[Runtime.InteropServices.Marshal]::FinalReleaseComObject($installer) | Out-Null
 Get-FileHash -LiteralPath $Output -Algorithm SHA256
