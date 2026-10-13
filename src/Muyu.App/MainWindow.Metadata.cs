@@ -14,7 +14,11 @@ public sealed partial class MainWindow
             if(await Dialog("编辑文件标签",new ScrollViewer{Content=panel,MaxHeight=500},"确认写入并保留备份")!=ContentDialogResult.Primary)return;
             if(current?.Path==track.Path){if(!await Command(new("pause")))return;CaptureReliablePosition();await Command(new("stop"));waitingToResume=true;SaveQueue(false);}
             var draft=new TagEditDraft(title.Text,artist.Text,album.Text,albumArtist.Text,genre.Text,(uint)year.Value,(uint)disc.Value,(uint)number.Value);
-            var result=await Task.Run(()=>TagEditing.Apply(track,draft,store.AcceptTagEdit));sessionRevision=store.ReadSession().Session?.Revision??sessionRevision;await ReloadLibraryState();queue=queue.Select(i=>i with{Track=knownTracks.GetValueOrDefault(i.Track.Id)??i.Track}).ToList();if(current?.Id==track.Id){long frame=rememberedFrame;PresentTrack(knownTracks[track.Id]);waitingToResume=true;rememberedFrame=frame;resumeSeconds=(double)frame/current.SampleRate;UpdateStoredPosition();}covers.Clear();await Refresh();Show("标签已写入，原文件备份："+result.Backup);
+            var result=await Task.Run(()=>TagEditing.Apply(track,draft,store.AcceptTagEdit));sessionRevision=store.ReadSession().Session?.Revision??sessionRevision;await ReloadLibraryState();
+            Track Updated(Track item)=>item.Path.Equals(result.Path,StringComparison.OrdinalIgnoreCase)?TagEditing.UpdateTrack(item,result.Metadata):item;
+            queue=queue.Select(i=>i with{Track=Updated(i.Track)}).ToList();
+            if(originalQueue!=null)originalQueue=originalQueue.Select(i=>i with{Track=Updated(i.Track)}).ToList();
+            if(current!=null&&current.Path.Equals(result.Path,StringComparison.OrdinalIgnoreCase)){long frame=rememberedFrame;PresentTrack(Updated(current));waitingToResume=true;rememberedFrame=frame;resumeSeconds=(double)frame/current.SampleRate;UpdateStoredPosition();}covers.Clear();await Refresh();Show("标签已写入，原文件备份："+result.Backup);
         }catch(Exception ex){Show("标签未写入："+ex.Message,true);}
     }
     private async Task ImportCueScheme()

@@ -4,6 +4,7 @@ public sealed record TagEditDraft(string Title,string Artist,string Album,string
 public sealed record TagEditResult(string Path,string Backup,SourceFingerprint Original,SourceFingerprint Updated,Metadata Metadata);
 public static class TagEditing
 {
+    public static Track UpdateTrack(Track track,Metadata metadata)=>track with{Title=track.CuePath==null?metadata.Title:track.Title,Artist=track.CuePath==null?metadata.Artist:track.Artist,Album=track.CuePath==null?metadata.Album:track.Album,Metadata=metadata.Details};
     private static string AudioHash(string path)
     {
         var info=NativeAudio.Probe(path);var track=new Track(Track.Identity(path),path,"","","",info.SampleRate,info.Bits,info.Channels,info.Frames);

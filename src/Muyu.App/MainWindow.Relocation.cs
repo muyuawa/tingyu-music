@@ -71,7 +71,7 @@ public sealed partial class MainWindow
             {
                 var result = await Task.Run(() => {
                     var issues = new List<ScanIssue>();
-                    var paths = files ?? LibraryScope.Enumerate(root!, true, cancellation.Token, issues).Where(path => new[] { ".wav", ".flac" }.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase)).ToArray();
+                    var paths = files ?? LibraryScope.Enumerate(root!, true, cancellation.Token, issues).Where(path => LibraryScanner.AudioExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase)).ToArray();
                     return (Rows: Relocation.Find(tracks, store.Fingerprints(tracks), paths, cancellation.Token), Issues: issues.Count);
                 }, cancellation.Token);
                 if (!alive) return;
@@ -87,7 +87,7 @@ public sealed partial class MainWindow
         list.SelectionChanged += (_, _) => Validate();
         list.ContainerContentChanging += (_, args) => { if (args.Item is RelocationCandidate candidate) args.ItemContainer.IsEnabled = candidate.Verified; };
         retry.Click += async (_, _) => await CheckConnection();
-        file.Click += async (_, _) => { try { var files = await Picker(".wav", ".flac").PickMultipleFilesAsync(); if (files.Count > 0) await Search(files.Select(f => f.Path).ToArray(), null); } catch (Exception ex) { status.Text = ex.Message; } };
+        file.Click += async (_, _) => { try { var files = await Picker(LibraryScanner.AudioExtensions).PickMultipleFilesAsync(); if (files.Count > 0) await Search(files.Select(f => f.Path).ToArray(), null); } catch (Exception ex) { status.Text = ex.Message; } };
         folder.Click += async (_, _) => { try { string? root = await PickFolder(); if (root != null) await Search(null, root); } catch (Exception ex) { status.Text = ex.Message; } };
         dialog.PrimaryButtonClick += async (_, args) =>
         {

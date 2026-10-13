@@ -1,4 +1,4 @@
-$ErrorActionPreference='Stop'
+﻿$ErrorActionPreference='Stop'
 $fixture=Join-Path (Split-Path $PSScriptRoot) ('artifacts\release-1.0\update-test-'+[guid]::NewGuid().ToString('N'))
 $source=Join-Path $fixture 'source';$target=Join-Path $fixture 'target'
 New-Item -ItemType Directory -Path $source,(Join-Path $target 'data') -Force | Out-Null
@@ -15,8 +15,9 @@ foreach($file in Get-ChildItem -LiteralPath $target -File){$oldFiles[$file.Name]
 [IO.File]::WriteAllText((Join-Path $target 'UI_RENDERING.md'),'user-edited-doc')
 $newFiles=[ordered]@{}
 foreach($file in Get-ChildItem -LiteralPath $source -File){$newFiles[$file.Name]=(Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash}
-@{version='1.0.0';files=$newFiles} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $source 'PACKAGE_MANIFEST.json') -Encoding UTF8
+@{version='1.0.1';files=$newFiles} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $source 'PACKAGE_MANIFEST.json') -Encoding UTF8
 $result=& (Join-Path $PSScriptRoot 'Update-InstalledMuyuMusic.ps1') -Source $source -Target $target | ConvertFrom-Json
+if($result.version -ne '1.0.1' -or (Get-Content -LiteralPath (Join-Path $target 'PACKAGE_MANIFEST.json') -Raw | ConvertFrom-Json).version -ne '1.0.1'){throw 'Updated version was not preserved'}
 if([IO.File]::ReadAllText((Join-Path $target 'Muyu.App.exe')) -ne 'new-Muyu.App.exe'){throw 'Program was not updated'}
 if([IO.File]::ReadAllText((Join-Path $target 'data\personal.txt')) -ne 'personal-data-preserved'){throw 'Personal data changed'}
 if(Test-Path -LiteralPath (Join-Path $target 'Muyu.App.pdb')){throw 'Owned obsolete debug file remains'}

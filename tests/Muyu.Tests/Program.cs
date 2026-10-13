@@ -137,6 +137,7 @@ using (var output = new BinaryWriter(File.Create(Path.Combine(preview, "暮色�
 }
 File.WriteAllText(Path.Combine(preview, "暮色之间.lrc"), "[00:00.00]把喧嚣留在身后\n[00:06.00]让晚风慢慢经过\n[00:12.00]沿着海岸走向夜色\n[00:18.00]每个音符都有归处\n[00:24.00]海面倒映着星光\n[00:30.00]此刻只听见远方\n[00:36.00]让思绪随风飘荡\n[00:42.00]再缓缓回到身旁\n[00:48.00]把喧嚣留在身后\n[01:00.00]沿着海岸走向夜色\n[01:12.00]每个音符都有归处", new UTF8Encoding(false));
 await CompletionTests.Run(root,Check);
+TagEditReferenceTests.Run(root,Check);
 IntegratedRegressionTests.Run(root,Check);
 var pauseEvents=new List<string>();
 async Task<bool> PauseCase(AudioBackend backend,string? failure=null){pauseEvents.Clear();return await PauseOutput.Execute(backend,action=>{pauseEvents.Add(action);return Task.FromResult(action!=failure);},()=>pauseEvents.Add("capture"),()=>pauseEvents.Add("released"));}

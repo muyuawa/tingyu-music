@@ -85,6 +85,18 @@ public sealed partial class MainWindow
             }
         }catch(Exception ex){VolumeSlider.IsEnabled=false;ToolTipService.SetToolTip(VolumeSlider,"音量控制暂不可用："+ex.Message);}
     }
+    private async Task RestoreSessionVolume()
+    {
+        if(volumeMode!="session"||savedAudio.Backend!=AudioBackend.WasapiShared)return;
+        // Each open can create a new session in the same host process. Restore before play,
+        // including tray/SMTC playback where the visible-window poll is suspended.
+        for(int attempt=0;attempt<10;attempt++)
+        {
+            if(SessionLevel((float)(sessionMuted?0:sessionVolume)).HasValue){appliedSessionProcess=audio.ProcessId;return;}
+            await Task.Delay(25,lifetime.Token);
+        }
+        throw new InvalidOperationException("未能恢复播放器会话音量，请重试播放");
+    }
     private void RefreshVolumeControls(double? actual=null)
     {
         settingVolume=true;

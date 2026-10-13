@@ -143,6 +143,7 @@ public sealed partial class MainWindow : Window
             if(!prepared&&await OfferCompatibleAudio(track))prepared=await Command(new("open",track,device,shared,Segments:segments,Settings:savedAudio,Evidence:segments.Select(i=>i.Track.Id).Distinct().Where(evidence.ContainsKey).ToDictionary(id=>id,id=>evidence[id])));
             if (prepared && rememberedFrame > 0) prepared = await Command(new("seek", Frame: rememberedFrame, ItemId: segments.FirstOrDefault()?.ItemId));
             if(prepared)exclusiveResumeGrant=null;
+            if(prepared)await RestoreSessionVolume();
             if (prepared && volumeMode=="software" && softwareMuted) prepared = await Command(new("mute",Frame:1));
             if (prepared && (!autoPlay || await Command(new("play"))))
             {

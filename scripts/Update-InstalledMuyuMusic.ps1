@@ -11,7 +11,8 @@ foreach($root in $sourceRoot,$targetRoot){if((Get-Item -LiteralPath $root).Attri
 $running=@(Get-CimInstance Win32_Process | Where-Object {$_.ExecutablePath -and $_.ExecutablePath.StartsWith($targetRoot+'\',[StringComparison]::OrdinalIgnoreCase)})
 if($running.Count){throw '请先退出 Muyu Music，包括托盘中的播放器；更新不会强制结束进程。'}
 $manifest=Get-Content -LiteralPath (Join-Path $sourceRoot 'PACKAGE_MANIFEST.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-if($manifest.version -ne '1.0.0'){throw '更新包版本不符'}
+$packageVersion=$null
+if(-not [Version]::TryParse([string]$manifest.version,[ref]$packageVersion)){throw '更新包版本无效'}
 $entries=@($manifest.files.PSObject.Properties)
 $obsolete=[Collections.Generic.List[object]]::new()
 $oldManifestPath=Join-Path $targetRoot 'PACKAGE_MANIFEST.json'
@@ -68,4 +69,4 @@ try{
     foreach($relative in $saved){Copy-Item -LiteralPath (Join-Path $backup $relative) -Destination (Join-Path $targetRoot $relative) -Force}
     throw
 }
-[pscustomobject]@{version='1.0.0';target=$targetRoot;backup=$backup;data_preserved=$true;processes_stopped=$false;files_verified=$entries.Count;obsolete_debug_files_removed=$obsolete.Count} | ConvertTo-Json
+[pscustomobject]@{version=$manifest.version;target=$targetRoot;backup=$backup;data_preserved=$true;processes_stopped=$false;files_verified=$entries.Count;obsolete_debug_files_removed=$obsolete.Count} | ConvertTo-Json
