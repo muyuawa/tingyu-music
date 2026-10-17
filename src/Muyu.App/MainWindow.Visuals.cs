@@ -96,7 +96,7 @@ public sealed partial class MainWindow
     }
     [System.Runtime.InteropServices.DllImport("user32.dll")]private static extern uint GetDpiForWindow(IntPtr window);
 
-    private Task<bool> ShowGlassPopover(string title,UIElement body,double width,string? primary=null)
+    private Task<bool> ShowGlassPopover(string title,UIElement body,double width,string? primary=null,bool scrollBody=true)
     {
         ClosePopover();
         popoverReturnFocus=FocusManager.GetFocusedElement(Root.XamlRoot) as Control;
@@ -106,7 +106,9 @@ public sealed partial class MainWindow
         header.Children.Add(new TextBlock{Text=title,FontSize=20,FontWeight=Microsoft.UI.Text.FontWeights.SemiBold,VerticalAlignment=VerticalAlignment.Center});
         var close=new Button{Content="×",Width=36,Height=36,Padding=new(0),Background=new SolidColorBrush(Colors.Transparent),BorderThickness=new(0)};
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(close,"关闭"+title);Grid.SetColumn(close,1);header.Children.Add(close);close.Click+=(_,_)=>ClosePopover();panel.Children.Add(header);
-        panel.Children.Add(new ScrollViewer{Content=body,MaxHeight=Math.Max(180,Root.ActualHeight-290),HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled});
+        panel.Children.Add(scrollBody
+            ?new ScrollViewer{Content=body,MaxHeight=Math.Max(180,Root.ActualHeight-290),HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled}
+            :new Border{Child=body,MaxHeight=Math.Max(180,Root.ActualHeight-290)});
         if(primary!=null){var action=new Button{Content=primary,HorizontalAlignment=HorizontalAlignment.Stretch};action.Click+=(_,_)=>ClosePopover(true);panel.Children.Add(action);}
         FloatingSurface.Width=Math.Min(width,Math.Max(300,Root.ActualWidth-48));FloatingContent.Content=panel;
         PopoverLayer.Visibility=Visibility.Visible;

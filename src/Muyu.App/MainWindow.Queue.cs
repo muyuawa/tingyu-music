@@ -58,7 +58,9 @@ public sealed partial class MainWindow
     }
     private async void Queue_Click(object sender,RoutedEventArgs e)
     {
-        var list=new ListView{Height=Math.Clamp(Root.ActualHeight-420,180,360),SelectionMode=ListViewSelectionMode.None,IsItemClickEnabled=true,CanDragItems=true,AllowDrop=true,Background=new SolidColorBrush(Microsoft.UI.Colors.Transparent)};
+        var list=new ListView{MaxHeight=Math.Clamp(Root.ActualHeight-420,180,360),MinHeight=80,SelectionMode=ListViewSelectionMode.None,IsItemClickEnabled=true,CanDragItems=true,AllowDrop=true,Background=new SolidColorBrush(Microsoft.UI.Colors.Transparent)};
+        ScrollViewer.SetVerticalScrollBarVisibility(list,ScrollBarVisibility.Visible);
+        ScrollViewer.SetHorizontalScrollBarVisibility(list,ScrollBarVisibility.Disabled);
         list.ItemTemplate=(DataTemplate)Microsoft.UI.Xaml.Markup.XamlReader.Load("""
             <DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
               <Grid Padding='0,7' ColumnSpacing='10'><Grid.ColumnDefinitions><ColumnDefinition Width='36'/><ColumnDefinition Width='*'/><ColumnDefinition Width='38'/><ColumnDefinition Width='16'/></Grid.ColumnDefinitions>
@@ -78,29 +80,50 @@ public sealed partial class MainWindow
         var hoverRows=new HashSet<Microsoft.UI.Xaml.Controls.Primitives.SelectorItem>();
         bool queueVisible=true;
         bool AnimateWave()=>queueVisible&&(captureActive||audio.Status.State==2&&windowForeground)&&store.Get("motion")!="reduced"&&store.Get("glass-economy")!="true";
+        Image? FindImage(DependencyObject parent){if(parent is Image image)return image;for(int i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++){var found=FindImage(VisualTreeHelper.GetChild(parent,i));if(found!=null)return found;}return null;}
+        FrameworkElement? FindNamed(DependencyObject parent,string name){if(parent is FrameworkElement element&&element.Name==name)return element;for(int i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++){var found=FindNamed(VisualTreeHelper.GetChild(parent,i),name);if(found!=null)return found;}return null;}
         async Task SetRowCover(Microsoft.UI.Xaml.Controls.Primitives.SelectorItem container,QueueItem item)
         {
-            await Task.Yield();if(!queueVisible||!ReferenceEquals(container.Content,item))return;
-            Image? FindImage(DependencyObject parent){if(parent is Image image)return image;for(int i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++){var found=FindImage(VisualTreeHelper.GetChild(parent,i));if(found!=null)return found;}return null;}
-            FrameworkElement? FindNamed(DependencyObject parent,string name){if(parent is FrameworkElement element&&element.Name==name)return element;for(int i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++){var found=FindNamed(VisualTreeHelper.GetChild(parent,i),name);if(found!=null)return found;}return null;}
+            if(!queueVisible||!ReferenceEquals(container.Content,item))return;
             if(FindNamed(container,"CurrentQueueMarker") is {} marker){marker.Visibility=index>=0&&index<queue.Count&&queue[index].ItemId==item.ItemId?Visibility.Visible:Visibility.Collapsed;if(!waves.TryGetValue(marker,out var wave)){wave=new(marker);waves.Add(marker,wave);}wave.Configure(AnimateWave());}
             if(hoverRows.Add(container)){container.PointerEntered+=(_,_)=>{if(FindNamed(container,"QueueDragHandle") is {} handle)handle.Opacity=.8;};container.PointerExited+=(_,_)=>{if(FindNamed(container,"QueueDragHandle") is {} handle)handle.Opacity=.12;};}
             var image=FindImage(container);if(image==null)return;
+            image.Source=null;
             var source=captureActive?CoverImage.Source:await Cover(item.Track);
-            if(ReferenceEquals(container.Content,item))image.Source=source;
+            if(queueVisible&&ReferenceEquals(container.Content,item)&&ReferenceEquals(FindImage(container),image))image.Source=source;
         }
-        list.ContainerContentChanging+=(sender,args)=>{if(!args.InRecycleQueue&&args.Item is QueueItem item){args.ItemContainer.Opacity=1;Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(args.ItemContainer,(item.ItemId==(index>=0&&index<queue.Count?queue[index].ItemId:Guid.Empty)?"正在播放，":"")+item.Track.DisplayTitle+"，"+item.Track.Artist);_=SetRowCover(args.ItemContainer,item);}};
+        void UpdateContainer(ListViewBase sender,ContainerContentChangingEventArgs args)
+        {
+            if(args.InRecycleQueue||args.Phase==0)
+            {
+                if(FindImage(args.ItemContainer) is {} image)image.Source=null;
+                if(FindNamed(args.ItemContainer,"CurrentQueueMarker") is {} marker){marker.Visibility=Visibility.Collapsed;if(waves.TryGetValue(marker,out var wave))wave.Configure(false);}
+                if(FindNamed(args.ItemContainer,"QueueDragHandle") is {} handle)handle.Opacity=.12;
+            }
+            if(args.InRecycleQueue||args.Item is not QueueItem item)return;
+            if(args.Phase==0)
+            {
+                args.ItemContainer.Opacity=1;
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(args.ItemContainer,(item.ItemId==(index>=0&&index<queue.Count?queue[index].ItemId:Guid.Empty)?"正在播放，":"")+item.Track.DisplayTitle+"，"+item.Track.Artist);
+                // Wait for WinUI to prepare the recycled template before resolving its image.
+                args.RegisterUpdateCallback(UpdateContainer);
+            }
+            else _=SetRowCover(args.ItemContainer,item);
+        }
+        list.ContainerContentChanging+=UpdateContainer;
         var status=new TextBlock{TextWrapping=TextWrapping.Wrap,FontSize=12,VerticalAlignment=VerticalAlignment.Center};
-        var controls=new StackPanel{Orientation=Orientation.Horizontal,Spacing=6,Visibility=Visibility.Collapsed};var panel=new StackPanel{Spacing=12};
-        var edit=new ToggleSwitch{Visibility=Visibility.Collapsed};panel.Children.Add(controls);
+        var controls=new StackPanel{Orientation=Orientation.Horizontal,Spacing=6,Visibility=Visibility.Collapsed};var panel=new Grid{RowSpacing=12};
+        foreach(int row in Enumerable.Range(0,6))panel.RowDefinitions.Add(new(){Height=row==1?new(1,GridUnitType.Star):GridLength.Auto});
+        void AddRow(FrameworkElement element,int row){Grid.SetRow(element,row);panel.Children.Add(element);}
+        var edit=new ToggleSwitch{Visibility=Visibility.Collapsed};AddRow(controls,2);
         var more=new Button{Content="···",Width=32,Height=32,MinHeight=32,Padding=new(0),Background=new SolidColorBrush(Microsoft.UI.Colors.Transparent),BorderThickness=new(0)};
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(more,"队列操作");
         var menu=new MenuFlyout();var select=new ToggleMenuFlyoutItem{Text="选择与排序"};select.Click+=(_,_)=>edit.IsOn=select.IsChecked;menu.Items.Add(select);
         var undo=new MenuFlyoutItem{Text="撤销队列更改"};undo.Click+=async(_,_)=>{await UndoQueue();};menu.Items.Add(undo);more.Flyout=menu;ApplyGlassToMenu(menu);
         var heading=new Grid{ColumnSpacing=12};heading.ColumnDefinitions.Add(new(){Width=new(1,GridUnitType.Star)});heading.ColumnDefinitions.Add(new(){Width=GridLength.Auto});heading.Children.Add(status);Grid.SetColumn(more,1);heading.Children.Add(more);
-        panel.Children.Insert(0,heading);panel.Children.Insert(1,list);
-        var removalPolicy=new ComboBox{Header="移除当前曲目时",ItemsSource=new[]{"播完后移除","立即停止并移除"},SelectedIndex=0,Visibility=Visibility.Collapsed};panel.Children.Add(removalPolicy);
-        var disableShuffle=new CheckBox{Content="手动排序时关闭随机播放",IsChecked=false,Visibility=Visibility.Collapsed};panel.Children.Add(disableShuffle);
+        AddRow(heading,0);AddRow(list,1);
+        var removalPolicy=new ComboBox{Header="移除当前曲目时",ItemsSource=new[]{"播完后移除","立即停止并移除"},SelectedIndex=0,Visibility=Visibility.Collapsed};AddRow(removalPolicy,3);
+        var disableShuffle=new CheckBox{Content="手动排序时关闭随机播放",IsChecked=false,Visibility=Visibility.Collapsed};AddRow(disableShuffle,4);
         edit.Toggled+=(_,_)=>{select.IsChecked=edit.IsOn;list.SelectionMode=edit.IsOn?ListViewSelectionMode.Extended:ListViewSelectionMode.None;controls.Visibility=removalPolicy.Visibility=edit.IsOn?Visibility.Visible:Visibility.Collapsed;disableShuffle.Visibility=edit.IsOn&&shuffle?Visibility.Visible:Visibility.Collapsed;};
         Guid[] Selection()=>list.SelectedItems.Cast<QueueItem>().Select(i=>i.ItemId).ToArray();
         Guid[] shown=[];int lastIndex=-2;
@@ -123,8 +146,8 @@ public sealed partial class MainWindow
         list.DragOver+=(_,args)=>{if(args.DataView.Contains(StandardDataFormats.Text))args.AcceptedOperation=DataPackageOperation.Move;};
         list.Drop+=async(_,args)=>{args.Handled=true;try{string value=await args.DataView.GetTextAsync();if(!value.StartsWith("muyu-queue:"))return;var selected=value[11..].Split(',').Select(Guid.Parse).ToHashSet();if(!selected.All(id=>queue.Any(i=>i.ItemId==id))||!await AllowQueueReorder(disableShuffle.IsChecked==true))return;var hit=args.OriginalSource as DependencyObject;while(hit!=null&&hit is not ListViewItem)hit=VisualTreeHelper.GetParent(hit);int destination=hit is ListViewItem item?list.IndexFromContainer(item):queue.Count;await EditQueue(()=>{queue=QueueEditing.MovePending(queue,QueueAnchor,selected,destination).ToList();nextInsertion=index+1;});RefreshQueue();}catch(Exception ex){Show(ex.Message,true);}};
         var clearPending=new Button{Content="清空待播",HorizontalAlignment=HorizontalAlignment.Stretch,Background=new SolidColorBrush(Microsoft.UI.Colors.Transparent)};
-        clearPending.Click+=async(_,_)=>{try{await EditQueue(()=>{queue=queue.Take(QueueAnchor+1).ToList();nextInsertion=index+1;});RefreshQueue();}catch(Exception error){Show(error.Message,true);}};panel.Children.Add(clearPending);
+        clearPending.Click+=async(_,_)=>{try{await EditQueue(()=>{queue=queue.Take(QueueAnchor+1).ToList();nextInsertion=index+1;});RefreshQueue();}catch(Exception error){Show(error.Message,true);}};AddRow(clearPending,5);
         var timer=new DispatcherTimer{Interval=TimeSpan.FromMilliseconds(500)};timer.Tick+=(_,_)=>{RefreshQueue();foreach(var wave in waves.Values)wave.Configure(AnimateWave());};RefreshQueue();timer.Start();
-        try{if(await ShowGlassPopover("播放队列",panel,440,"保存为播放列表"))await SaveQueuePlaylist();}finally{queueVisible=false;timer.Stop();foreach(var wave in waves.Values)wave.Dispose();if(queueItemActivation==Activate)queueItemActivation=null;}
+        try{if(await ShowGlassPopover("播放队列",panel,440,"保存为播放列表",scrollBody:false))await SaveQueuePlaylist();}finally{queueVisible=false;timer.Stop();foreach(var wave in waves.Values)wave.Dispose();if(queueItemActivation==Activate)queueItemActivation=null;}
     }
 }

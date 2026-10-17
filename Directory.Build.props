@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <Version>1.0.1</Version>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <Version>1.0.2</Version>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <Deterministic>true</Deterministic>
     <DebugType Condition="'$(MuyuDiagnostics)' != 'true'">none</DebugType>
