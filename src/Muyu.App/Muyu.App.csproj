@@ -7,10 +7,8 @@
     <UseWinUI>true</UseWinUI><WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained><SelfContained>true</SelfContained>
     <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><EnableMsixTooling>false</EnableMsixTooling>
-    <MuyuDiagnostics Condition="'$(MuyuDiagnostics)' == ''">false</MuyuDiagnostics>
-    <DefineConstants Condition="'$(MuyuDiagnostics)' == 'true'">$(DefineConstants);MUYU_DIAGNOSTICS</DefineConstants>
-    <DebugType Condition="'$(MuyuDiagnostics)' != 'true'">none</DebugType>
-    <DebugSymbols Condition="'$(MuyuDiagnostics)' != 'true'">false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Assets\*.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
@@ -25,9 +23,6 @@
     <Content Include="..\..\native\build\Release\MuyuAudio.dll" Link="MuyuAudio.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\native\build\_deps\flac-src\COPYING.Xiph" Link="licenses\libFLAC.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(MuyuDiagnostics)' != 'true'">
-    <Compile Remove="MainWindow.Capture*.cs;WindowCapture.cs"/>
   </ItemGroup>
   <Target Name="PublishMuyuXamlResources" AfterTargets="ComputeFilesToPublish">
     <Error Condition="!Exists('$(ProjectPriFullPath)')" Text="The application XAML resource index was not generated." />

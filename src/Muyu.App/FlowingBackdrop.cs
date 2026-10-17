@@ -100,7 +100,6 @@ public sealed class FlowingBackdrop : IDisposable
         visible=enabled;host.Visibility=enabled?Visibility.Visible:Visibility.Collapsed;animate=!reducedMotion&&!lowPower;UpdateAnimation();
     }
     public void SetForeground(bool value){if(foreground==value)return;foreground=value;UpdateAnimation();}
-    internal void SetDiagnosticProgress(float rotation,float drift){artwork.SetDiagnosticProgress(rotation,drift);foreach(var controller in controllers)if(controller!=null)controller.Progress=drift;}
     private void UpdateAnimation(){artwork.SetAnimating(IsAnimating);foreach(var controller in controllers)if(IsAnimating)controller?.Resume();else controller?.Pause();}
     public void Dispose()
     {

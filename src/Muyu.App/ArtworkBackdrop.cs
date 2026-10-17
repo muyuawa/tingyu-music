@@ -109,15 +109,6 @@ internal sealed class ArtworkBackdrop : IDisposable
             sprite.Size=new(geometry.Side,geometry.Side);sprite.CenterPoint=geometry.Pivot;sprite.Offset=geometry.Offset;
         }
     }
-    internal void SetDiagnosticProgress(float rotation,float drift)
-    {
-        if(frame==null)return;
-        foreach(var sprite in frame.Sprites)
-        {
-            if(sprite.TryGetAnimationController("RotationAngleInDegrees") is {} spin)spin.Progress=rotation;
-            if(sprite.TryGetAnimationController("RelativeOffsetAdjustment") is {} movement)movement.Progress=drift;
-        }
-    }
     internal void SetAnimating(bool value){animating=value;if(frame!=null)foreach(var controller in frame.Controllers)if(value)controller.Resume();else controller.Pause();}
     private void ClearRetired(){foreach(var old in retired){root.Children.Remove(old.Visual);old.Dispose();}retired.Clear();}
     public void Dispose(){frame?.Dispose();foreach(var old in retired)old.Dispose();retired.Clear();graphics.Dispose();root.Dispose();}

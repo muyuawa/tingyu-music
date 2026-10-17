@@ -32,7 +32,6 @@ public sealed class GlassRenderer : IDisposable
         public LiquidGlassBrush? Brush;
         public long LastPointerUpdate;
         public float PointerAngle=-105;
-        public int PointerUpdates;
         public bool PointerActive;
         public required SizeChangedEventHandler Resize;
         public required PointerEventHandler Move, Leave;
@@ -43,7 +42,6 @@ public sealed class GlassRenderer : IDisposable
     public void SetAccent(Color value){if(accent==value)return;accent=value;foreach(var surface in surfaces.Values.Where(s=>s.Material==GlassMaterial.Navigation))Apply(surface);}
     public string? Diagnostic { get; private set; }
     public GlassParameters Parameters { get; set; }=new();
-    public int ActiveShaderCount => surfaces.Values.Count(s => s.Brush?.IsUsingShader == true);
     public event Action<string>? Failed;
 
     public GlassRenderer()
@@ -115,7 +113,7 @@ public sealed class GlassRenderer : IDisposable
             float delta=MathF.IEEERemainder(angle-surface.PointerAngle,360);
             surface.PointerAngle+=delta;
         }
-        surface.PointerActive=true;surface.PointerUpdates++;
+        surface.PointerActive=true;
         brush.GlareFactor=Parameters.Highlight*(dark?.9:1);
         brush.GlareAngle=surface.PointerAngle;
         brush.RefFactor=BaseRefraction(surface.Material)+.16f*Math.Min(1,MathF.Sqrt(dx*dx+dy*dy)*2);
@@ -128,12 +126,6 @@ public sealed class GlassRenderer : IDisposable
         brush.GlareAngle=-105;
         brush.RefFactor=BaseRefraction(surface.Material);
     }
-    internal (int Updates,float Angle,bool Shader,bool InputSeparate,double Glare,double Rim) PointerState(FrameworkElement host)
-    {
-        var s=surfaces[host];return(s.PointerUpdates,s.PointerAngle,s.Brush?.IsUsingShader==true,s.PointerHost!=s.Host,s.Brush?.GlareFactor??0,s.Brush?.RefFresnelFactor??0);
-    }
-    internal void DiagnosticPointer(FrameworkElement host,float x,float y)=>UpdatePointer(surfaces[host],x,y);
-    internal void DiagnosticLeave(FrameworkElement host)=>ResetPointer(surfaces[host]);
     private double BlurFor(GlassMaterial material)=>economy?Math.Min(2,material==GlassMaterial.Elevated?Parameters.OverlayBlur:Parameters.Blur):material==GlassMaterial.Elevated?Parameters.OverlayBlur:Parameters.Blur;
     public void PreviewBlur(double controls,double overlays)
     {

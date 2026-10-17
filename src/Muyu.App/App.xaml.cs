@@ -20,10 +20,6 @@ public partial class App : Application
         string stage = "准备数据目录";
         try
         {
-#if MUYU_DIAGNOSTICS
-            var commandLine=Environment.GetCommandLineArgs();int captureIndex=Array.IndexOf(commandLine,"--capture-ui");
-            if(captureIndex>=0&&captureIndex+1<commandLine.Length)Environment.SetEnvironmentVariable("MUYU_DATA_DIR",Path.Combine(Path.GetFullPath(commandLine[captureIndex+1]),"session-"+Guid.NewGuid().ToString("N")));
-#endif
             string? scope = await SelectDataFolder();
             if (scope == null) { Exit(); return; }
             Environment.SetEnvironmentVariable("MUYU_DATA_DIR", scope);

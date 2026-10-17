@@ -4,7 +4,7 @@
     <AssemblyVersion>1.0.2.0</AssemblyVersion>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <Deterministic>true</Deterministic>
-    <DebugType Condition="'$(MuyuDiagnostics)' != 'true'">none</DebugType>
-    <DebugSymbols Condition="'$(MuyuDiagnostics)' != 'true'">false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 </Project>

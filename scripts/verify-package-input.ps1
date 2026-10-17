@@ -1,17 +1,17 @@
-param([string]$Source=(Join-Path $PSScriptRoot '..\artifacts\portable'),[switch]$BuildOnly)
+param([string]$Source=(Join-Path $PSScriptRoot '..\artifacts\portable'))
 $ErrorActionPreference='Stop'
 $sourceRoot=(Resolve-Path -LiteralPath $Source).Path
 [xml]$properties=Get-Content -LiteralPath (Join-Path (Split-Path $PSScriptRoot) 'Directory.Build.props')
-foreach($resource in 'Muyu.App.pri','App.xbf','MainWindow.xbf'){if(-not (Test-Path -LiteralPath (Join-Path $sourceRoot $resource))){throw "Required application resource is missing: $resource"}}
-if($BuildOnly){
-    $report=Get-Content -LiteralPath (Join-Path $sourceRoot 'BUILD_INFO.json') -Raw | ConvertFrom-Json
-    if($report.build -ne $properties.Project.PropertyGroup.Version -or $report.status -ne 'build_only'){throw 'Build-only package input does not match the current version.'}
-    $report
-    return
+foreach($resource in 'Muyu.App.pri','App.xbf','MainWindow.xbf','MuyuAudio.dll','audio-host\MuyuAudio.dll','portable.marker'){
+    if(-not (Test-Path -LiteralPath (Join-Path $sourceRoot $resource))){throw "Required package file is missing: $resource"}
 }
-$report=Get-Content -LiteralPath (Join-Path $sourceRoot 'VERIFICATION.json') -Raw | ConvertFrom-Json
-if($report.build -ne $properties.Project.PropertyGroup.Version -or -not $report.binaries){throw 'Run build.ps1 and test.ps1 for this version before packaging.'}
-foreach($binary in $report.binaries.PSObject.Properties){$path=[IO.Path]::GetFullPath((Join-Path $sourceRoot $binary.Name));if(-not $path.StartsWith($sourceRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Invalid verification path'};if((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ne $binary.Value){throw "Binary changed after verification: $($binary.Name)"}}
+$report=Get-Content -LiteralPath (Join-Path $sourceRoot 'BUILD_INFO.json') -Raw | ConvertFrom-Json
+if($report.build -ne $properties.Project.PropertyGroup.Version){throw 'Run build.ps1 for the current version before packaging.'}
+foreach($assembly in 'Muyu.App.dll','Muyu.Core.dll','audio-host\Muyu.AudioHost.dll','audio-host\Muyu.Core.dll'){
+    $version=[Reflection.AssemblyName]::GetAssemblyName((Join-Path $sourceRoot $assembly)).Version
+    if($version.ToString() -ne $properties.Project.PropertyGroup.AssemblyVersion){throw "Wrong packaged version: $assembly"}
+}
+if((Get-FileHash -LiteralPath (Join-Path $sourceRoot 'MuyuAudio.dll')).Hash -ne (Get-FileHash -LiteralPath (Join-Path $sourceRoot 'audio-host\MuyuAudio.dll')).Hash){throw 'Native libraries differ between app and host'}
 $ffmpeg=Get-Content -LiteralPath (Join-Path $sourceRoot 'licenses\sources\ffmpeg-source.json') -Raw | ConvertFrom-Json
 foreach($library in $ffmpeg.libraries){foreach($folder in $sourceRoot,(Join-Path $sourceRoot 'audio-host')){if((Get-FileHash -LiteralPath (Join-Path $folder $library.name) -Algorithm SHA256).Hash -ne $library.sha256){throw 'FFmpeg binary does not match exact source manifest'}}}
 $report

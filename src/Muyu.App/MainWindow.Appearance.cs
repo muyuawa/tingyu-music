@@ -11,11 +11,6 @@ public sealed partial class MainWindow
     private bool sceneResourcesPresent=true;
     private static readonly string[] accentAliases=["SliderThumbBackground","SliderThumbBackgroundPointerOver","SliderThumbBackgroundPressed","SliderTrackValueFill","SliderTrackValueFillPointerOver","SliderTrackValueFillPressed","ListViewItemSelectionIndicatorBrush","ListViewItemSelectionIndicatorPointerOverBrush","ListViewItemSelectionIndicatorPressedBrush"];
     private AlbumScene? activeColorScene,targetColorScene;
-    private Color[]? albumPalette
-    {
-        get=>albumColors.HasArtwork?albumColors.Colors.Select(ToColor).ToArray():null;
-        set=>albumColors=value==null?AlbumColorEngine.Fallback:AlbumColorEngine.Analyze(value.SelectMany(c=>new byte[]{c.R,c.G,c.B,255}).ToArray());
-    }
     private bool EffectiveDark=>Root.ActualTheme==ElementTheme.Dark;
     private ElementTheme EffectiveTheme=>EffectiveDark?ElementTheme.Dark:ElementTheme.Light;
     private static Color ToColor(RgbColor c)=>Color.FromArgb(255,c.R,c.G,c.B);
@@ -71,5 +66,4 @@ public sealed partial class MainWindow
         glassRenderer?.SetAccent(accent);
         artworkElevation?.SetArtworkStyle(albumColors.IsDark,albumColors.IsBright,ToColor(scene.Accent));
     }
-    private static Color[] ExtractPalette(byte[] pixels)=>AlbumColorEngine.Analyze(pixels).Colors.Select(ToColor).ToArray();
 }

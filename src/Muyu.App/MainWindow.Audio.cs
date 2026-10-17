@@ -95,16 +95,10 @@ public sealed partial class MainWindow
         string text=$"输出模式：{Backend(savedAudio.Backend)}\n"+(actual==null?"当前未建立音频输出":$"来源：{actual.SourceRate} Hz / {actual.SourceBits} bit / {actual.SourceChannels} 声道\n输出：{actual.OutputRate} Hz / {actual.OutputBits} bit / {actual.OutputChannels} 声道\n缓冲：{1000.0*actual.ActualBufferFrames/actual.OutputRate:0.0} ms");
         if(!string.IsNullOrEmpty(audio.Error))text+=$"\n\n最近播放错误：{audio.Error}";
         var panel=new StackPanel{Spacing=14};panel.Children.Add(new TextBlock{Text=text,TextWrapping=TextWrapping.Wrap,IsTextSelectionEnabled=true});
-#if MUYU_DIAGNOSTICS
-        var copy=new Button{Content="复制播放诊断"};copy.Click+=(_,_)=>{var package=new Windows.ApplicationModel.DataTransfer.DataPackage();package.SetText(PlaybackDiagnostic());Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);copy.Content="已复制";};panel.Children.Add(copy);
-#endif
         await Dialog("音频信息",new ScrollViewer{MaxHeight=520,Content=panel});
     }
 
     private string? lastAudioFailure;
-#if MUYU_DIAGNOSTICS
-    private string PlaybackDiagnostic()=>System.Text.Json.JsonSerializer.Serialize(new{version=typeof(MainWindow).Assembly.GetName().Version?.ToString(),time=DateTimeOffset.Now,song=current?.Title,source_rate=current?.SampleRate,source_bits=current?.Bits,source_channels=current?.Channels,encoding=current?.Encoding.ToString(),settings=savedAudio,actual=audio.Actual,status=audio.Status,error=audio.Error,last_failure=lastAudioFailure},new System.Text.Json.JsonSerializerOptions{WriteIndented=true,IncludeFields=true});
-#endif
     private void RecordAudioFailure(Exception exception,string action,Track? track)
     {
         lastAudioFailure=System.Text.Json.JsonSerializer.Serialize(new{time=DateTimeOffset.Now,action,song=track?.Title,source_rate=track?.SampleRate,source_bits=track?.Bits,source_channels=track?.Channels,encoding=track?.Encoding.ToString(),settings=savedAudio,error_code=$"0x{audio.Status.Error:X8}",exception_code=$"0x{exception.HResult:X8}",message=exception.Message});

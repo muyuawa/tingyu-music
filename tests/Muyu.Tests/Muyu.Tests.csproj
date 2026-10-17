@@ -1,6 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><RuntimeIdentifier>win-x64</RuntimeIdentifier><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
-  <ItemGroup><ProjectReference Include="..\..\src\Muyu.Core\Muyu.Core.csproj"/><Content Include="..\..\native\build\Release\MuyuAudio.dll" Link="MuyuAudio.dll" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>
-  <ItemGroup><Content Include="..\..\native\build\Release\av*.dll;..\..\native\build\Release\swresample*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>
-  <ItemGroup><Compile Include="..\..\src\Muyu.App\BackdropLayout.cs" Link="BackdropLayout.cs" /></ItemGroup>
-</Project>

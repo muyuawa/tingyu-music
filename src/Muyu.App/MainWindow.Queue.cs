@@ -32,27 +32,21 @@ public sealed partial class MainWindow
         if(removeAfterPlay.Remove(previous.Value)){int position=queue.FindIndex(i=>i.ItemId==previous);if(position>=0){queue.RemoveAt(position);if(position<=index)index--;nextInsertion=index+1;queueStructureRevision++;queueUndo=null;}}
     }
     private Task<bool> AllowQueueReorder(bool confirmed){if(!shuffle)return Task.FromResult(true);if(!confirmed){Show("请在队列中勾选允许关闭随机播放后，再调整顺序");return Task.FromResult(false);}shuffle=false;ShuffleButton.Opacity=.55;originalQueue=null;SaveQueue();return Task.FromResult(true);}
-    private Func<QueueItem,bool,Task>? queueItemActivation;
-    private Func<Track,Task>? queuePreviewStart=null;
-    private async Task ActivateQueueItem(Guid itemId,Func<Track,Task>? startPreview=null)
+    private async Task ActivateQueueItem(Guid itemId)
     {
         await queueEdits.WaitAsync();
         try
         {
             if(busy||closed||!queue.Any(item=>item.ItemId==itemId))return;
-            if(startPreview==null)
-            {
-                busy=true;
-                try{if(audio.Status.State==2&&!await Command(new("pause")))return;SynchronizeCurrent();}
-                finally{busy=false;}
-            }
+            busy=true;
+            try{if(audio.Status.State==2&&!await Command(new("pause")))return;SynchronizeCurrent();}
+            finally{busy=false;}
             Guid? previous=index>=0&&index<queue.Count?queue[index].ItemId:null;
             if(previous!=itemId)CompleteDeferred(previous);
             index=queue.FindIndex(item=>item.ItemId==itemId);
             if(index<0)return;
             playedQueueIds.Remove(itemId);removeAfterPlay.Remove(itemId);nextInsertion=index+1;
-            if(startPreview!=null)await startPreview(queue[index].Track);
-            else{clock.Start();await Start(queue[index].Track);}
+            clock.Start();await Start(queue[index].Track);
         }
         finally{queueEdits.Release();}
     }
@@ -79,7 +73,7 @@ public sealed partial class MainWindow
         var waves=new Dictionary<FrameworkElement,PlaybackWave>();
         var hoverRows=new HashSet<Microsoft.UI.Xaml.Controls.Primitives.SelectorItem>();
         bool queueVisible=true;
-        bool AnimateWave()=>queueVisible&&(captureActive||audio.Status.State==2&&windowForeground)&&store.Get("motion")!="reduced"&&store.Get("glass-economy")!="true";
+        bool AnimateWave()=>queueVisible&&audio.Status.State==2&&windowForeground&&store.Get("motion")!="reduced"&&store.Get("glass-economy")!="true";
         Image? FindImage(DependencyObject parent){if(parent is Image image)return image;for(int i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++){var found=FindImage(VisualTreeHelper.GetChild(parent,i));if(found!=null)return found;}return null;}
         FrameworkElement? FindNamed(DependencyObject parent,string name){if(parent is FrameworkElement element&&element.Name==name)return element;for(int i=0;i<VisualTreeHelper.GetChildrenCount(parent);i++){var found=FindNamed(VisualTreeHelper.GetChild(parent,i),name);if(found!=null)return found;}return null;}
         async Task SetRowCover(Microsoft.UI.Xaml.Controls.Primitives.SelectorItem container,QueueItem item)
@@ -89,7 +83,7 @@ public sealed partial class MainWindow
             if(hoverRows.Add(container)){container.PointerEntered+=(_,_)=>{if(FindNamed(container,"QueueDragHandle") is {} handle)handle.Opacity=.8;};container.PointerExited+=(_,_)=>{if(FindNamed(container,"QueueDragHandle") is {} handle)handle.Opacity=.12;};}
             var image=FindImage(container);if(image==null)return;
             image.Source=null;
-            var source=captureActive?CoverImage.Source:await Cover(item.Track);
+            var source=await Cover(item.Track);
             if(queueVisible&&ReferenceEquals(container.Content,item)&&ReferenceEquals(FindImage(container),image))image.Source=source;
         }
         void UpdateContainer(ListViewBase sender,ContainerContentChangingEventArgs args)
@@ -132,12 +126,11 @@ public sealed partial class MainWindow
         {
             if(edit.IsOn)return;
             if(multiSelect){edit.IsOn=true;list.SelectedItems.Add(item);return;}
-            try{await ActivateQueueItem(item.ItemId,captureActive?queuePreviewStart:null);RefreshQueue();}
+            try{await ActivateQueueItem(item.ItemId);RefreshQueue();}
             catch(Exception ex){Show("切歌未完成："+ex.Message,true);}
         }
-        queueItemActivation=Activate;
         list.ItemClick+=async(_,args)=>{if(args.ClickedItem is QueueItem item){bool Down(Windows.System.VirtualKey key)=>(Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(key)&Windows.UI.Core.CoreVirtualKeyStates.Down)!=0;await Activate(item,Down(Windows.System.VirtualKey.Control)||Down(Windows.System.VirtualKey.Shift));}};
-        list.KeyDown+=async(_,args)=>{if(args.Key==Windows.System.VirtualKey.Enter&&list.SelectedItem is QueueItem item){args.Handled=true;try{await ActivateQueueItem(item.ItemId,captureActive?queuePreviewStart:null);RefreshQueue();}catch(Exception ex){Show(ex.Message,true);}}};
+        list.KeyDown+=async(_,args)=>{if(args.Key==Windows.System.VirtualKey.Enter&&list.SelectedItem is QueueItem item){args.Handled=true;try{await ActivateQueueItem(item.ItemId);RefreshQueue();}catch(Exception ex){Show(ex.Message,true);}}};
         void Button(string name,Func<Task> action){var b=new Button{Content=name,FontSize=12,Padding=new(10,6,10,6)};b.Click+=async(_,_)=>{try{await action();RefreshQueue();}catch(Exception ex){Show(ex.Message,true);}};controls.Children.Add(b);}
         Button("移除",async()=>await RemoveQueueSelection(Selection().ToHashSet(),removalPolicy.SelectedIndex==1));
         Button("清空待播",async()=>await EditQueue(()=>{queue=queue.Take(QueueAnchor+1).ToList();nextInsertion=index+1;}));Button("撤销",UndoQueue);
@@ -148,6 +141,6 @@ public sealed partial class MainWindow
         var clearPending=new Button{Content="清空待播",HorizontalAlignment=HorizontalAlignment.Stretch,Background=new SolidColorBrush(Microsoft.UI.Colors.Transparent)};
         clearPending.Click+=async(_,_)=>{try{await EditQueue(()=>{queue=queue.Take(QueueAnchor+1).ToList();nextInsertion=index+1;});RefreshQueue();}catch(Exception error){Show(error.Message,true);}};AddRow(clearPending,5);
         var timer=new DispatcherTimer{Interval=TimeSpan.FromMilliseconds(500)};timer.Tick+=(_,_)=>{RefreshQueue();foreach(var wave in waves.Values)wave.Configure(AnimateWave());};RefreshQueue();timer.Start();
-        try{if(await ShowGlassPopover("播放队列",panel,440,"保存为播放列表",scrollBody:false))await SaveQueuePlaylist();}finally{queueVisible=false;timer.Stop();foreach(var wave in waves.Values)wave.Dispose();if(queueItemActivation==Activate)queueItemActivation=null;}
+        try{if(await ShowGlassPopover("播放队列",panel,440,"保存为播放列表",scrollBody:false))await SaveQueuePlaylist();}finally{queueVisible=false;timer.Stop();foreach(var wave in waves.Values)wave.Dispose();}
     }
 }

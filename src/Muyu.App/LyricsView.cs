@@ -32,8 +32,6 @@ public sealed class LyricsView : UserControl
     private DateTime scrollStarted;
     private bool scrolling;
     private bool renderingActive=true;
-    internal int CachedEffectCount=>effectCache.Count;
-    internal long DrawCount{get;private set;}
     public void SetRenderingActive(bool value)
     {
         if(renderingActive==value)return;renderingActive=value;
@@ -66,12 +64,7 @@ public sealed class LyricsView : UserControl
     public Func<double, bool>? CanSeek { get; set; }
     public event Action<double>? SeekRequested;
     public event Action? FollowingResumed;
-    internal bool IsFollowing => lyrics.Timed && !browsing && !persistentClear && follow.Visibility == Visibility.Collapsed;
-    internal bool IsCurrentLineAligned => active >= 0 && active < layouts.Count && Math.Abs(offset - target) < 1;
-    internal int ActiveLine => active;
-    internal bool IsCurrentLineAboveTransport=>active>=0&&active<layouts.Count&&layouts[active].Y-offset+layouts[active].Layout.LayoutBounds.Height<=FocusHeight;
     internal float FadeEnd=>(float)canvas.ActualHeight;
-    internal (int Line,double Top,double Bottom,double MaskAlpha)[] VisibleLinesBetween(double top,double bottom)=>layouts.Select((row,i)=>(Line:i,Top:(double)(row.Y-offset+row.Layout.LayoutBounds.Top),Bottom:(double)(row.Y-offset+row.Layout.LayoutBounds.Bottom))).Where(row=>row.Top<bottom&&row.Bottom>top).Select(row=>(row.Line,row.Top,row.Bottom,MaskAlpha:Math.Clamp((FadeEnd-(Math.Max(top,row.Top)+Math.Min(bottom,row.Bottom))/2)/80,0,1))).ToArray();
     public LyricsView()
     {
         var grid = new Grid(); grid.Children.Add(canvas); grid.Children.Add(readable); grid.Children.Add(follow); Content = grid;
@@ -185,7 +178,6 @@ public sealed class LyricsView : UserControl
     private void Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
         if(!renderingActive)return;
-        DrawCount++;
         // Focus reserves control space; the drawing viewport continues behind the glass.
         float height = Math.Max(1, FadeEnd);
         using var mask = new CanvasLinearGradientBrush(sender, new CanvasGradientStop[]

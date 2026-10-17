@@ -61,7 +61,6 @@ public sealed class SoftElevation : IDisposable
         foreach(var layer in layers)layer.Size=size;
     }
     public void SetVisible(bool visible)=>root.IsVisible=visible;
-    internal bool IsVisible=>root.IsVisible;
     public void SetArtworkStyle(bool darkArtwork,bool brightArtwork,Color ambient)
     {
         if(outsideOnly)return;

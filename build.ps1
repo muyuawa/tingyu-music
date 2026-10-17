@@ -12,7 +12,7 @@ try {
     if (-not $SkipNative) {
         & $cmake -S native -B native/build -G 'Visual Studio 17 2022' -A x64
         if ($LASTEXITCODE -ne 0) { throw 'Native configuration failed' }
-        & $cmake --build native/build --config Release --target MuyuAudio MuyuCodecTests -j 6
+        & $cmake --build native/build --config Release --target MuyuAudio -j 6
         if ($LASTEXITCODE -ne 0) { throw 'Native build failed' }
     }
     & $sdk publish src/Muyu.AudioHost/Muyu.AudioHost.csproj -c Release -o $audioHost
@@ -47,6 +47,6 @@ try {
     Copy-Item -LiteralPath 'examples\srt-lyrics-extension.json' -Destination (Join-Path $portable 'examples')
     [IO.File]::WriteAllText((Join-Path $portable 'portable.marker'),'Muyu Music portable data is stored in the adjacent data folder.')
     [xml]$properties=Get-Content -LiteralPath (Join-Path $repo 'Directory.Build.props')
-    [pscustomobject]@{build=$properties.Project.PropertyGroup.Version;status='build_only';built_at=(Get-Date).ToString('o');tests_run=$false;gui_tested=$false;hardware_tested=$false;audio_output_opened=$false} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $portable 'BUILD_INFO.json') -Encoding utf8
+    [pscustomobject]@{build=$properties.Project.PropertyGroup.Version;built_at=(Get-Date).ToString('o')} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $portable 'BUILD_INFO.json') -Encoding utf8
     Write-Output (Join-Path $portable 'Muyu.App.exe')
 } finally { Pop-Location }

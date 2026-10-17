@@ -6,7 +6,7 @@ $version=$properties.Project.PropertyGroup.Version
 $files=[Collections.Generic.List[object]]::new()
 function Include([string]$Path,[string]$Relative){$files.Add([pscustomobject]@{Path=$Path;Relative=$Relative.Replace('\','/')})}
 foreach($file in Get-ChildItem -LiteralPath $repo -File){Include $file.FullName $file.Name}
-foreach($folder in 'src','tests','scripts','licenses','examples'){
+foreach($folder in 'src','scripts','licenses','examples'){
     foreach($file in Get-ChildItem -LiteralPath (Join-Path $repo $folder) -Recurse -File | Where-Object {$_.FullName -notmatch '\\(bin|obj)\\'}){Include $file.FullName $file.FullName.Substring($repo.Length+1)}
 }
 foreach($file in Get-ChildItem -LiteralPath (Join-Path $repo 'native') -File){Include $file.FullName ('native/'+$file.Name)}

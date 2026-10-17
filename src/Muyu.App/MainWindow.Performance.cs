@@ -8,7 +8,7 @@ public sealed partial class MainWindow
         if(closed)return;
         bool visible=MainSurfaceVisible;
         LyricsCanvas.SetRenderingActive(visible&&page=="now");
-        flowingBackdrop?.SetForeground(!captureFlowFrozen&&(captureActive||visible&&windowForeground));
+        flowingBackdrop?.SetForeground(visible&&windowForeground);
         var interval=TimeSpan.FromMilliseconds(!visible?1000:windowForeground&&page=="now"?100:250);
         if(clock.Interval!=interval)clock.Interval=interval;
     }

@@ -1,1 +1,0 @@
-These short codec regression fixtures were generated from MuyuCodecTests' synthetic integer PCM waveform. They contain no third-party recordings or user music. create-codec-fixtures.ps1 can regenerate them with a local FFmpeg encoder, or copy these fixtures when that development encoder is absent. The encoder itself is not distributed.

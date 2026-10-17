@@ -5,7 +5,6 @@
 #include <shobjidl.h>
 #include <filesystem>
 #include <string>
-#include <iostream>
 #include <stdexcept>
 namespace fs=std::filesystem;
 
@@ -157,32 +156,3 @@ extern "C" __declspec(dllexport) UINT __stdcall RestoreTingyuInstallPath(MSIHAND
     if(result==ERROR_SUCCESS)MsiSetPropertyW(session,L"INSTALLFOLDER",previous);
     return result;
 }
-#ifdef INSTALLER_PROBE
-int wmain(int argc,wchar_t** argv) {
-    if(argc==3 && std::wstring(argv[1])==L"--test-cleanup") {
-        try{RemoveOwnedChild(fs::path(argv[2]),L"owned");return 0;}catch(...){return 7;}
-    }
-    if(argc<2 || argc>4)return 2;
-    MsiSetInternalUI(INSTALLUILEVEL_NONE,nullptr);
-    MSIHANDLE session=0;
-    if(MsiOpenPackageExW(argv[1],MSIOPENPACKAGEFLAGS_IGNOREMACHINESTATE,&session)!=ERROR_SUCCESS)return 3;
-    if(argc==4 && std::wstring(argv[2])==L"--existing") {
-        const auto existing=ValidInstall(argv[3]);if(existing.empty()){MsiCloseHandle(session);return 6;}
-        MsiSetPropertyW(session,L"INSTALLROOT",existing.parent_path().c_str());
-        MsiSetPropertyW(session,L"MUYU_PREVIOUS_INSTALL",existing.c_str());
-        MsiSetPropertyW(session,L"MUYU_EXISTING_INSTALL",L"1");
-    }
-    else if(argc==3)MsiSetPropertyW(session,L"INSTALLROOT",argv[2]);
-    else DetectTingyuInstall(session);
-    for(const auto action:{L"CostInitialize",L"FileCost",L"CostFinalize"})
-        if(MsiDoActionW(session,action)!=ERROR_SUCCESS){MsiCloseHandle(session);return 4;}
-    if(RestoreTingyuInstallPath(session)!=ERROR_SUCCESS){MsiCloseHandle(session);return 5;}
-    for(const auto name:{L"INSTALLROOT",L"INSTALLFOLDER",L"MUYU_EXISTING_INSTALL",L"MUYU_PREVIOUS_INSTALL"}) {
-        wchar_t value[32768]{};DWORD length=32768;
-        MsiGetPropertyW(session,name,value,&length);std::wcout<<name<<L"="<<value<<L"\n";
-    }
-    wchar_t target[32768]{};DWORD targetLength=32768;
-    MsiGetTargetPathW(session,L"INSTALLFOLDER",target,&targetLength);std::wcout<<L"RESOLVED_TARGET="<<target<<L"\n";
-    MsiCloseHandle(session);return 0;
-}
-#endif

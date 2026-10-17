@@ -86,10 +86,6 @@ public sealed partial class MainWindow : Window
                 InitializePlayerGlass();
                 ApplyVisualPreferences();
                 await ReceiveActivation(Environment.GetCommandLineArgs(),true);
-#if MUYU_DIAGNOSTICS
-                var captureArgs=Environment.GetCommandLineArgs();int captureAt=Array.IndexOf(captureArgs,"--capture-ui");
-                if(captureAt>=0&&captureAt+1<captureArgs.Length)await CaptureIntegratedUi(captureArgs[captureAt+1]);
-#endif
             }
             catch (Exception ex) { Show(ex.Message, true); }
         };
@@ -521,9 +517,6 @@ public sealed partial class MainWindow : Window
         var diagnostics=new StackPanel{Spacing=12};
         var audioDetails=new Button{Content="音频信息"};audioDetails.Click+=(_,_)=>{afterSettingsClose=()=>AudioInfo_Click(this,new());openSettings?.Hide();};diagnostics.Children.Add(audioDetails);
         var audioDevices=new Button{Content="输出设备与音频设置"};audioDevices.Click+=(_,_)=>{afterSettingsClose=()=>Devices_Click(this,new());openSettings?.Hide();};diagnostics.Children.Add(audioDevices);
-#if MUYU_DIAGNOSTICS
-        diagnostics.Children.Add(new TextBlock{Text=glassRenderer?.Diagnostic??"未报告玻璃渲染错误",TextWrapping=TextWrapping.Wrap,FontSize=12});
-#endif
         panel.Children.Add(new Expander{Header="音频",Content=diagnostics,HorizontalAlignment=HorizontalAlignment.Stretch});
         var buildShortcuts=ShortcutEditor(panel);var buildExtensions=LyricsExtensionEditor(panel);
         panel.Children.Add(new Expander{Header="关于听屿",HorizontalAlignment=HorizontalAlignment.Stretch,Content=new TextBlock{Text=$"听屿 {typeof(MainWindow).Assembly.GetName().Version?.ToString(3)}\n本地离线音乐播放器 · Windows x64\n数据目录：{dataFolder}\n许可与依赖：程序目录中的 THIRD_PARTY_NOTICES.md 和 licenses。\n便携版数据保存在相邻 data；安装版数据保存在当前用户目录。",TextWrapping=TextWrapping.Wrap,IsTextSelectionEnabled=true}});

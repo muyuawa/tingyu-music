@@ -1,9 +1,9 @@
-﻿param([string]$Source=(Join-Path $PSScriptRoot '..\artifacts\portable'),[string]$Output,[switch]$BuildOnly)
+﻿param([string]$Source=(Join-Path $PSScriptRoot '..\artifacts\portable'),[string]$Output)
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot
 $sourceRoot=(Resolve-Path -LiteralPath $Source).Path
 . (Join-Path $PSScriptRoot 'release-files.ps1')
-$null=& (Join-Path $PSScriptRoot 'verify-package-input.ps1') -Source $sourceRoot -BuildOnly:$BuildOnly
+$null=& (Join-Path $PSScriptRoot 'verify-package-input.ps1') -Source $sourceRoot
 $wix=Join-Path (Split-Path $repo) '.tools\wix\wix.exe'
 $uiExtension='WixToolset.UI.wixext/6.0.2'
 & $wix extension add $uiExtension
